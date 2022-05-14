@@ -1,11 +1,14 @@
 package jpabook.jpashop.domain;
 
 import jpabook.jpashop.domain.item.Item;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 
 @Entity
+@NoArgsConstructor(access= AccessLevel.PROTECTED)
 @Data
 public class OrderItem {
     @Id @GeneratedValue
@@ -23,6 +26,12 @@ public class OrderItem {
     private int orderPrice; //주문 가격
 
     private int count; //주문 수량
+
+    //이것도 롬복으로 줄일수 있음 @NoArgsConstructor(access=AcessLevel.PROTECTECT)
+//    protected OrderItem(){
+//
+//    }
+
 
     //==생성 메서드==//
     //매개변수로 Item item 안에 price가 있으니까 굳이 int orderPrice로 안 해도 되지 않나?

@@ -1,6 +1,8 @@
 package jpabook.jpashop.domain;
 
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -9,6 +11,8 @@ import java.util.List;
 
 @Entity
 @Table(name="orders")
+//protected 생성자 생성한것과 동일
+@NoArgsConstructor(access= AccessLevel.PROTECTED)
 @Data
 public class Order {
     @Id @GeneratedValue

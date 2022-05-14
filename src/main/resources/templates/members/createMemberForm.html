@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/header :: header" />
+<style>
+    .fieldError {
+        border-color: #bd2130;
+    }
+</style>
+<body>
+
+<div class="container">
+    <div th:replace="fragments/bodyHeader :: bodyHeader"/>
+
+    <!--th:object로 저렇게 해놓으면 이 form 안에서 memberForm 객체를 계속 쓰겠다는 의미이다.-->
+    <form role="form" action="/members/new" th:object="${memberForm}" method="post">
+        <div class="form-group">
+            <label th:for="name">이름</label>
+
+            <!--*{name}에서 *표시는 object를 참고하는 것이다. 즉 name에 접근을 한다. 여기서의 핵심은
+            input type은 text이고 th:field는 id와 name을 "name"이라고 하라는 것이다. 개발자 툴에서 보면
+            id와 name를 field값으로 맞춰준다.-->
+            <!--name에 에러가 있다면 fieldError로만들어라 그리고 -->
+            <input type="text" th:field="*{name}" class="form-control" placeholder="이름을 입력하세요"
+                   th:class="${#fields.hasErrors('name')}? 'form-control fieldError' : 'form-control'">
+            <!--에러가 있다면 name과 관련된 에러를 출력하라는 것-->
+            <p th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Incorrect date</p>
+
+        </div>
+        <div class="form-group">
+            <label th:for="city">도시</label>
+            <input type="text" th:field="*{city}" class="form-control" placeholder="도시를 입력하세요">
+        </div>
+        <div class="form-group">
+            <label th:for="street">거리</label>
+            <input type="text" th:field="*{street}" class="form-control" placeholder="거리를 입력하세요">
+        </div>
+        <div class="form-group">
+            <label th:for="zipcode">우편번호</label>
+            <input type="text" th:field="*{zipcode}" class="form-control" placeholder="우편번호를 입력하세요">
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+    <br/>
+    <div th:replace="fragments/footer :: footer" />
+</div> <!-- /container -->
+
+</body>
+</html>

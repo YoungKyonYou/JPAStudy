@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @Transactional(readOnly=true)
 @RequiredArgsConstructor
@@ -32,6 +34,13 @@ public class OrderService {
         delivery.setAddress(member.getAddress());
 
         //주문상품 생성
+        /*
+        Service 단에서 이렇게 하는 게 아니라 OrderItem orderItem=new ~
+        orderItem.setCount, orderItem.setPrice해서 만드는 경우가 있는데
+        나중에 유지보수하기도 어렵고 일관성이 없다. 예를 들어 생성로직에 필드를 추가한다거나 변경한다거나
+        로직을 더 넣는 다거나 하면 복잡해지기 때문에 이런 식의 생성은 막아야 한다. 이거 외의 다른 스타일의 생성은 막는다.
+        어떻게 막냐면 OrderItem에 Constructor를 Protected로 설정한다.
+         */
         OrderItem orderItem = OrderItem.createOrderItem(item, item.getPrice(), count);
 
         //주문 생성
@@ -57,8 +66,27 @@ public class OrderService {
         orderRepository.save(order);
         return order.getId();
     }
-
-    //취소
+    /**
+     * 주문취소
+     */
+    @Transactional
+    public void cancelOrder(Long orderId){
+        //주문 엔티티 조회
+        Order order = orderRepository.findOne(orderId);
+        //주문 취소
+        /*
+        JPA를 활용하면 이렇게 Order.java에 cancel()메서드에 있는 것처럼 데이터만 바꾸면, Entity 안에 있는 데이터만 바꿔주면
+        JPA가 알아서 변경된 포인트들을 dirty checking으로 인해 변경 내역 감지를 통해 데이터베이스에 업데이트 쿼리가 날라간다.
+        지금 바꾼 데이터가 Order.java에 setStatus(OrderStatus.CANCEL)로 바꿨으니 Order에 Update가 일어날 것이고
+        그리고 OrderItem.java에 바꾼 건 없지만 getItem().addStock(count)를 보니 addStock() 메서드 안에서
+        this.stockQuantity+=quantity에서 stockQuantity가 바뀌었으니 Item도 쿼리가 날라가서 stockQuantity가 Update될 것이다.
+        이게 JPA를 사용하는 엄청 큰 장점이다.
+          */
+        order.cancel();
+    }
 
     //검색
+/*    public List<Order> findOrders(OrderSearch orderSearch){
+        return orderRepository.findAll(orderSearch);
+    }*/
 }
