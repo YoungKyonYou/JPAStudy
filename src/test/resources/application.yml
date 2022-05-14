@@ -1,0 +1,24 @@
+spring:
+
+  # 아래와 같은 설정들이 SpringBoot에서는 필요가 없다 왜냐면 기본적으로 메모리모드로 돌리기 때문이다.(SpringBoot에서)
+#  datasource:
+#    url: jdbc:h2:mem:test
+#    username: sa
+#    password:
+#    driver-class-name: org.h2.Driver
+#  jpa:
+#    hibernate:
+#      ddl-auto: create
+#    properties:
+#      hibernate:
+##        show-sql: true
+#        format_sql: true
+#    thymeleaf:
+#      cache: false
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.hibernate.type: trace
+server:
+  port: 8083
