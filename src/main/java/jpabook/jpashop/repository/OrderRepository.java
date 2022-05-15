@@ -1,6 +1,7 @@
-package jpabook.jpashop.domain.repository;
+package jpabook.jpashop.repository;
 
 import jpabook.jpashop.domain.Order;
+import jpabook.jpashop.repository.order.simplequery.OrderSimpleQueryDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
@@ -109,4 +110,29 @@ public class OrderRepository {
         TypedQuery<Order> query = em.createQuery(cq).setMaxResults(1000);
         return query.getResultList();
     }
+
+    //이러한 기법을 fetch join이라고 한다. JPA에만 있는 문법임
+    //이건 매우 중요하기 실무에서 JPA를 쓰려면 100% 이해해야 한다!!
+    public List<Order> findAllWithMemberDelivery() {
+        return em.createQuery(
+                "select o from Order o"+
+                        " join fetch o.member m"+
+                        " join fetch o.delivery d", Order.class)
+                .getResultList();
+
+    }
+/*
+    public List<OrderSimpleQueryDto> findOrderDtos() {
+        //select new jpabook.jpashop.repository.order.simplequery.OrderSimpleQueryDto()에서 주의할 점은 엔티티를 인자로 넘기면 안된다.
+        //그렇게 되면 엔티티가 식별자로 들어가기 때문이다 그래서 OrderSimpleQueryDto에서 생성자 파라미터를 일일이 다시 만들어준 것이다.
+        //하지만 d.address처럼 Address는 가능하다. Address 클래스에 들어가보면 엔티티가 아니라 value타입이기 때문이다. 이런 건 값으로 동작하기 때문이다.
+        return em.createQuery(
+                "select new jpabook.jpashop.repository.OrderSimpleQueryDto(o.id, m.name, o.orderDate, o.status, d.address)"+
+                        " from Order o"+
+                        " join o.member m"+
+                        " join o.delivery d", OrderSimpleQueryDto.class)
+                .getResultList();
+    }*/
+
+
 }

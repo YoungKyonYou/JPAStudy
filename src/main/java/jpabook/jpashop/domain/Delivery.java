@@ -1,5 +1,6 @@
 package jpabook.jpashop.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 import javax.persistence.*;
@@ -11,7 +12,10 @@ public class Delivery {
     @Column(name="delivery_id")
     private Long id;
 
-
+    /*
+        OrderSimpleApiController에서 ordersV1 메서드를 호출할 때 발생하는 무한루프를 막기 위함
+         */
+    @JsonIgnore
     @OneToOne(fetch = FetchType.LAZY, mappedBy="delivery")
     private Order order;
 

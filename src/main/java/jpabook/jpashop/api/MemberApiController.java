@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -18,8 +19,34 @@ public class MemberApiController {
     @GetMapping("/api/v1/members")
     public List<Member> membersV1(){
         //이런 식으로 하면 쓸데없는 정보도 같이 제공된다. 순수한 회원정보만 API로 뿌리고 싶은데 order 정보까지 다 간다.
-
+        //엔티티를 직접적으로 노출하지 말것!
         return memberService.findMembers();
+    }
+
+    @GetMapping("/api/v2/members")
+    public Result memberV2(){
+        List<Member> findMembers=memberService.findMembers();
+        List<MemberDto> collect = findMembers.stream().map(m -> new MemberDto(m.getName()))
+                .collect(Collectors.toList());
+        /*이렇게 한번 감싸줘야 한다. 그래야 껍데기 Object가 생기고 그 안에 data 배열이 생기게 된다.
+        List를 바로 컬렉션으로 바로 내면 json 배열 타입으로 나가버리기 때문에 유연성이 떨어진다.
+        언젠가는 요구사항이 계속 바뀔텐데 배열가지고는 쉽게 되지 않는다 그래서 이렇게 Result라는 껍데기로 한번 감싼다.*/
+        return new Result(collect.size(),collect);
+
+    }
+
+    @Data
+    @AllArgsConstructor
+    static class Result<T>{
+        //이런 식으로 필드를 추가할 수 있다.
+        private int count;
+        private T data;
+    }
+
+    @Data
+    @AllArgsConstructor
+    static class MemberDto{
+        private String name;
     }
 
     @PostMapping("/api/v1/members")

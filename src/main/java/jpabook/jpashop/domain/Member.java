@@ -31,6 +31,9 @@ public class Member {
     /*api를 만들 때 이 Member를 그대로 넘겨줄때 이 orders가 빠진다. 하지만 과연 이게 맞나?
     엔티티를 직접적으로 넘겨주지 말아야 한다! 이런 어노테이션은 나중에 실무에서 답이 안나온다.*/
     //@JsonIgnore
+    /*
+    * OrderSimpleApiController에서 ordersV1 메서드를 호출할 때 발생하는 무한루프를 막기 위함*/
+    @JsonIgnore
     @OneToMany(mappedBy="member")
     private List<Order> orders=new ArrayList<>();
 

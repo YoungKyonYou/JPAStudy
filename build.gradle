@@ -29,6 +29,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     //이건 테스트나 개발할 땐 괜찮지만 배포할 때 성능 테스트는 꼭 해봐야 한다. 받아들일만 하면 쓰기
     implementation 'com.github.gavlyukovskiy:flexy-pool-spring-boot-starter:1.8.0'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-hibernate5'
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'com.h2database:h2'

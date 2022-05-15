@@ -1,5 +1,6 @@
 package jpabook.jpashop.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jpabook.jpashop.domain.item.Item;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -19,6 +20,10 @@ public class OrderItem {
     @JoinColumn(name = "item_id")
     private Item item;
 
+    /*
+    OrderSimpleApiController에서 ordersV1 메서드를 호출할 때 발생하는 무한루프를 막기 위함
+     */
+    @JsonIgnore
     @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name = "order_id")
     private Order order;
