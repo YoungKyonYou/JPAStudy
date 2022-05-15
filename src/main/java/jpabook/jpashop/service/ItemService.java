@@ -1,5 +1,6 @@
 package jpabook.jpashop.service;
 
+import jpabook.jpashop.domain.item.Book;
 import jpabook.jpashop.domain.item.Item;
 import jpabook.jpashop.domain.repository.ItemRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,5 +26,20 @@ public class ItemService {
 
     public Item findOne(Long itemId){
         return itemRepository.findOne(itemId);
+    }
+
+    @Transactional
+    public void updateItem(Long itemId, String name, int price, int stockQuantity){
+        Item findItem = itemRepository.findOne(itemId);
+        //이런 건 findItem.change(price, name, stockQuantity); 라고 메서드를 만드는 게 좋다.
+//        findItem.setPrice(param.getPrice());
+//        findItem.setName(param.getName());
+//        findItem.setStockQuantity(param.getStockQuantity());
+        //이걸 할 필요가 없다 영속 상태이기 때문이다.
+        //itemRepository.save(findItem);
+
+        findItem.setName(name);
+        findItem.setPrice(price);
+        findItem.setStockQuantity(stockQuantity);
     }
 }

@@ -55,6 +55,13 @@ public class MemberController {
     @GetMapping("/members")
     public String list(Model model){
         List<Member> members = memberService.findMembers();
+        //화면에 뿌리는데 엔티티를 손 댈것이 없고 바로 출력할 수 있으니까 form 대신 member를 반환했다
+        //template engine에서 어쩌피 서버 안에서 기능이 돌기 때문에 화면 템플릿에 이렇게 엔티티를 전달해줘도 되나
+        //API를 만들때는 이유를 불문하고 절대!!!! 엔티티를 넘기면 안된다.
+        //API는 스펙인데 member 엔티티를 반환하게 되면 만약 member 엔티티에 필드 하나를 추가하게 되면
+        //두가지 문제가 생긴다. 예를 들어 userpassword가 member 엔티티에 추가된다면 password가 그대로 노출된다는 문제가 있고
+        //또 API 스펙이 변해 버린다. 그럼 불완전한 API가 되버린다. 하지만 템플릿 엔진에서(thymeleaf)에는 엔티티를 넘겨줘도 괜찮다.
+        //제일 깔끔한 것은 dto로 변환해서 반환하는 것이 가장 깔끔하다.
         model.addAttribute("members",members);
         return "members/memberList";
     }
