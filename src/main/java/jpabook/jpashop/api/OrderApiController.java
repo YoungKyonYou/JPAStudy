@@ -7,6 +7,8 @@ import jpabook.jpashop.domain.OrderStatus;
 import jpabook.jpashop.domain.item.Book;
 import jpabook.jpashop.repository.OrderRepository;
 import jpabook.jpashop.repository.OrderSearch;
+import jpabook.jpashop.repository.order.query.OrderFlatDto;
+import jpabook.jpashop.repository.order.query.OrderItemQueryDto;
 import jpabook.jpashop.repository.order.query.OrderQueryDto;
 import jpabook.jpashop.repository.order.query.OrderQueryRepository;
 import lombok.Data;
@@ -19,7 +21,10 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -57,7 +62,7 @@ public class OrderApiController {
         List<Order> orders = orderRepository.findAllByString(new OrderSearch());
         List<OrderDto> collect = orders.stream()
                 .map(o -> new OrderDto(o))
-                .collect(Collectors.toList());
+                .collect(toList());
         return collect;
     }
     // @Data나 @Getter가 없으면 No serializer found for class 에러가 발생한다.
@@ -92,7 +97,7 @@ public class OrderApiController {
             //order.getOrderItems().stream().forEach(o->o.getItem().getCategories().forEach(m->m.getName()));
 
             //OrderItem으로 매핑하는 것이 아니라 OrderItemDto로 매핑을 해줘야 한다.
-            orderItems=order.getOrderItems().stream().map(orderItem -> new OrderItemDto(orderItem)).collect(Collectors.toList());
+            orderItems=order.getOrderItems().stream().map(orderItem -> new OrderItemDto(orderItem)).collect(toList());
 
         }
     }
@@ -122,7 +127,7 @@ public class OrderApiController {
         List<Order> orders=orderRepository.findAllWithItem();
         List<OrderDto> collect = orders.stream()
                 .map(o -> new OrderDto(o))
-                .collect(Collectors.toList());
+                .collect(toList());
         return collect;
     }
 
@@ -148,7 +153,7 @@ public class OrderApiController {
         List<Order> orders=orderRepository.findAllWithMemberDelivery(offset, limit);
         List<OrderDto> result = orders.stream()
                 .map(o -> new OrderDto(o))
-                .collect(Collectors.toList());
+                .collect(toList());
         return result;
     }
 
@@ -170,7 +175,50 @@ public class OrderApiController {
         return orderQueryRepository.findOrderQueryDtos();
     }
 
+    /**
+     * V4에서 발생한 N+1 문제 해결
+     * Query: 루트 1번, 컬렉션 1번
+     * *ToOne 관계들을 먼저 조회하고 여기서 얻은 식별자 orderId로 *ToMany 관계인 OrderItem을 한꺼번에 조회한다.
+     * MAP을 사용해서 매칭 성능 향상(O(1))
+     */
+    @GetMapping("/api/v5/orders")
+    public List<OrderQueryDto> ordersV5(){
+
+        return orderQueryRepository.findAllByDto_optimization();
+    }
 
 
+    //반환형이 List<OrderFlatDto>가 아닌 우리가 원하는 스펙이 OrderQueryDto라고 해보자(원하는 데이터 스펙이 OrderQueryDto)
+    //이 방법은 쿼리는 한번이지만 조인으로 인해 DB에서 애플리케이션에 전달하는 데이터에 중복 데이터가 추가되므로 상황에 따라 V5보다 더 느릴 수 있다.
+    //즉, 상황에 따라서 V5에 따라 느릴 수 있는데 데이터가 엄청 클 때 이야기이다. 데이터가 많지 않으면 이게 빠르다.
+    //그리고 애플리케이션에서 추가 작업이 크다
+    //그리고 페이징이 불가능하다.(출력된 쿼리 h2에서 직접 출력해보기 그럼 알거임)
+    @GetMapping("/api/v6/orders")
+    public List<OrderQueryDto> ordersV6(){
+        
+
+        List<OrderFlatDto> flats = orderQueryRepository.findAllByDto_flat();
+
+
+        //이건 그냥 아래 리턴 문을 이해하려고 작성한 코드인다.
+        //https://www.baeldung.com/java-groupingby-collector 여기를 보면 groupingBy가 3가지로 오버로딩된 것을 볼 수 있음, 문서에서 두번째 꺼임
+//        Map<OrderQueryDto, List<OrderItemQueryDto>> collect = flats.stream()
+//                .collect(groupingBy(o -> new OrderQueryDto(o.getOrderId(), o.getName(), o.getOrderDate(), o.getOrderStatus(), o.getAddress()),
+//                        mapping(o -> new OrderItemQueryDto(o.getOrderId(), o.getItemName(), o.getOrderPrice(), o.getCount()), toList())
+//                ));
+        //이렇게 최종적으로 OrderQueryDto를 반환해 주게 되는 것이다.
+        // 그리고 @EqualsAndHashCode(of="orderId") 부분 유의하기 이것은 OrderQueryDto.java에서의 주석 확인하기
+        /**
+         * entrySet()이하는 Map<OrderQueryDto, List<OrderItemQueryDto>> collect로 뽑는다. 그리고 각 Map를 순회하게 된다.
+         * 순회하면서 OrderQueryDto.java에서 orderItem 필드를 포함하는 생성자로 초기화해주게 되는 것이다.
+         */
+        return flats.stream()
+                .collect(groupingBy(o -> new OrderQueryDto(o.getOrderId(),o.getName(), o.getOrderDate(), o.getOrderStatus(), o.getAddress()),
+                        mapping(o -> new OrderItemQueryDto(o.getOrderId(),o.getItemName(), o.getOrderPrice(), o.getCount()), toList())
+                )).entrySet().stream()
+                .map(e -> new OrderQueryDto(e.getKey().getOrderId(),e.getKey().getName(), e.getKey().getOrderDate(), e.getKey().getOrderStatus(),e.getKey().getAddress(), e.getValue()))
+                .collect(toList());
+
+    }
 
 }
