@@ -3,11 +3,14 @@ package jpabook.jpashop.domain.item;
 import jpabook.jpashop.domain.Category;
 import jpabook.jpashop.domain.exception.NotEnoughStockException;
 import lombok.Data;
+import org.hibernate.annotations.BatchSize;
 
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
+//Order.java의 private List<OrderItem> orderItems=new ArrayList<>(); 쪽 주석 참고
+//@BatchSize(size=100)
 @Entity
 @Data
 @Inheritance(strategy=InheritanceType.SINGLE_TABLE)

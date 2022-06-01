@@ -15,6 +15,7 @@ spring:
       hibernate:
         show-sql: true
         format_sql: true
+        default_batch_fetch_size: 100
     thymeleaf:
       cache: false
 

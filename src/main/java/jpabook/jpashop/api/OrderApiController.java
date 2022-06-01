@@ -131,6 +131,14 @@ public class OrderApiController {
         /**
          * 여기서는 V3에서의 한계를 돌파해본다. 즉, 페이징도 가능하고 페치 조인도 가능하며 성능도 최적화시킬 수 있는 방법을 알아본다.(강의 보는 거 추천)
          *  첫 번째 최적화 방법: *ToOne 관계에 있는 것은 모두 fetch join를 한다(findAllWithMemberDelivery())
+         *  resources 폴더 아래 application.yml에서 default_batch_fetch_size: 100라고 설정을 했다
+         *  이것은 만약 Item이 1000개이면 루프가 10번을 돈다는 의미이다. in(...) query를 100개씩 날리는 것이다.
+         *  지금 Item에 4개가 저장되어 있다 만약 batch_fetch_size:3으로 해두면 2번 루프가 되는데 한번은 3번 in(...) query를 날리고 한번은 1번 in(...) query를 날리게 될 것이다.
+         *  즉 이걸로 인해서 1+N+M이였던 쿼리 개수가 1+1+1이 되는 것이다. 즉 페이징도 되고 성능최적화를 시켰다. 물론 V3에서는 쿼리가 한번에 나간거에 비해 좀 더 나간건 맞다.
+         *  하지만! 이게 정말 느릴까? 이게 장단점이 있다. 이전 V3에서의 문제는 fetch join를 하지만 중복이 너무 많다.(뻥튀기) 이것은 DB에서 이미 다 데이터를 가져오고 앱 단에서 걸러주는데
+         *  그래서 쿼리는 한방에 나가지만 데이터 전송량 자체는 많아지는 것이다. 하지만 이 V3.1은 쿼리가 3개 나가지만 데이터가 최적화되서 나간다.
+         *  자 그러면 batch_fetch_size를 몇으로 걸어주면 되나? minimum은 없는데 maximum은 있다. 맥시멈 1000개이다.
+         *  왜냐면 in query가 천개를 넘어가면 오류를 일으키는 것들이 있어서 그것이 max라고 보면 된다.
          */
         //List<Order> orders=orderRepository.findAllWithMemberDelivery();
 

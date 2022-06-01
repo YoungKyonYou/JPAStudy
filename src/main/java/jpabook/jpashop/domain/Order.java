@@ -3,6 +3,7 @@ package jpabook.jpashop.domain;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.BatchSize;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -27,6 +28,10 @@ public class Order {
     //마지막으로 persist(order)를 해줘야 하는데 이것을 설정하게 되면
     //persist(order)만 하면 OrderItem를 따로 persist 안 해줘도 된다.
     @OneToMany(mappedBy = "order", cascade=CascadeType.ALL)
+    //resources아래 application.yml 파일에 적은 default_batch_fetch_size: 100은 글로벌하게 적용하는 것인데
+    //이렇게 @BatchSize를 하는 것은 좀 더 디테일 적용하게 하는 것이다. 컬렉션을 사용할 경우 이렇게 적용하면 되는데 컬렉션이 아닌경우도 있다.(예:OrderItem.java의 Item부분 거긴 *ToOne 관계이다.)
+    //그럴때는 Item.java의 class 위에다가 적는다. 하지만 이것도 이렇게 적는 게 크게 의미가 없다. 상황에 따라 달라지기 때문이다 그래서 강사님은 yml에다가 글로벌하게 자주 적용하신다.
+    //@BatchSize(size=1000)
     private List<OrderItem> orderItems=new ArrayList<>();
 
 
