@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.Serializable;
@@ -108,9 +109,32 @@ public class OrderApiController {
         }
     }
 
-    @GetMapping("/api/v2/orders")
-    public List<OrderDto> ordersV2(){
-        List<Order> orders = orderRepository.findAllByString(new OrderSearch());
+    /**
+     * V2에서는 쿼리가 여러개 나갔는데 여기서는 쿼리가 1번만 나가게 된다.
+     * 여기서 fetch join을 findAllWithItem()에서 해주고 있다. 사실상 코드는 V2와 거의 똑같다.
+     */
+    @GetMapping("/api/v3/orders")
+    public List<OrderDto> ordersV3(){
+        //findAllWithItem() 메서드 영역 부분에 주석 꼭 확인하고 강의 듣기(이대로 하면 데이터가 뻥튀기 된다)
+        List<Order> orders=orderRepository.findAllWithItem();
+        List<OrderDto> collect = orders.stream()
+                .map(o -> new OrderDto(o))
+                .collect(Collectors.toList());
+        return collect;
+    }
+
+    @GetMapping("/api/v3.1/orders")
+    public List<OrderDto> ordersV3_page(@RequestParam(value="offset",defaultValue="0") int offset,
+                                        @RequestParam(value="limit", defaultValue="100")int limit)
+    {
+        //Order와 Member, Delivery를 fetch join한다.
+        /**
+         * 여기서는 V3에서의 한계를 돌파해본다. 즉, 페이징도 가능하고 페치 조인도 가능하며 성능도 최적화시킬 수 있는 방법을 알아본다.(강의 보는 거 추천)
+         *  첫 번째 최적화 방법: *ToOne 관계에 있는 것은 모두 fetch join를 한다(findAllWithMemberDelivery())
+         */
+        //List<Order> orders=orderRepository.findAllWithMemberDelivery();
+
+        List<Order> orders=orderRepository.findAllWithMemberDelivery(offset, limit);
         List<OrderDto> collect = orders.stream()
                 .map(o -> new OrderDto(o))
                 .collect(Collectors.toList());
