@@ -7,6 +7,8 @@ import jpabook.jpashop.domain.OrderStatus;
 import jpabook.jpashop.domain.item.Book;
 import jpabook.jpashop.repository.OrderRepository;
 import jpabook.jpashop.repository.OrderSearch;
+import jpabook.jpashop.repository.order.query.OrderQueryDto;
+import jpabook.jpashop.repository.order.query.OrderQueryRepository;
 import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderApiController {
     private final OrderRepository orderRepository;
+    private final OrderQueryRepository orderQueryRepository;
 
     /**
      *
@@ -143,16 +146,29 @@ public class OrderApiController {
         //List<Order> orders=orderRepository.findAllWithMemberDelivery();
 
         List<Order> orders=orderRepository.findAllWithMemberDelivery(offset, limit);
-        List<OrderDto> collect = orders.stream()
+        List<OrderDto> result = orders.stream()
                 .map(o -> new OrderDto(o))
                 .collect(Collectors.toList());
-        return collect;
+        return result;
     }
 
 
-
-
-
+    /**
+     * V3.1은 엔티티를 조회해서 데이터를 가져오는 방변에 여기서는 원하는 데이터를 모두 조인해서 한번에 필요한 데이터만 조회하는 방식이다.
+     * 이러한 방식을 "DTO로 조회하는 방식"이라고 일반적으로 이야기한다.
+     * 이렇게 DTO로 조회하게 되면 엔티티가 아니다. 따라서 지연로딩, Fetch join등을 사용할 수 없다.
+     * 이렇게 DTO로 조회하려면 SQL의 JOIN문을 사용해서 처음부터 원하는 데이터를 모두 선택해서 조회해야 한다.
+     */
+    @GetMapping("/api/v4/orders")
+    public List<OrderQueryDto> ordersV4(){
+        /**
+         * 이렇게 하면 order, member, deliver를 조인해서 한 쿼리로 가져오고(fetch join아님 그냥 join임)
+         * orderitem이랑 item를 가져온다. 이것은 findOrderQueryDtos() 메서드 안에 findOrderItems()할때 발생한다.
+         * 그래서 총 쿼리는 Order 한번 그리고 Item 각각 하나씩(2개) 해서 총 3번 발생한다.
+         * 하지만 이것도 결과적으로 N+1 문제이다.
+         */
+        return orderQueryRepository.findOrderQueryDtos();
+    }
 
 
 
