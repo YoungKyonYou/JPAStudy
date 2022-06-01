@@ -85,4 +85,6 @@ public class ItemController {
         itemService.updateItem(itemId,form.getName(),form.getPrice(),form.getStockQuantity());
         return "redirect:/items";
     }
+
+
 }
