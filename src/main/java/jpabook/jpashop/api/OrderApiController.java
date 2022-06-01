@@ -176,10 +176,12 @@ public class OrderApiController {
     }
 
     /**
+     * Order가 많으면 그걸 in() 절로 한번에 가져온 다음에 메모리에 올려놓은 다음 조립
      * V4에서 발생한 N+1 문제 해결
      * Query: 루트 1번, 컬렉션 1번
      * *ToOne 관계들을 먼저 조회하고 여기서 얻은 식별자 orderId로 *ToMany 관계인 OrderItem을 한꺼번에 조회한다.
      * MAP을 사용해서 매칭 성능 향상(O(1))
+     * 강사님은 V6보다 V5 방식을 많이 사용하나 항상 상황을 봐야한다.
      */
     @GetMapping("/api/v5/orders")
     public List<OrderQueryDto> ordersV5(){
@@ -193,6 +195,7 @@ public class OrderApiController {
     //즉, 상황에 따라서 V5에 따라 느릴 수 있는데 데이터가 엄청 클 때 이야기이다. 데이터가 많지 않으면 이게 빠르다.
     //그리고 애플리케이션에서 추가 작업이 크다
     //그리고 페이징이 불가능하다.(출력된 쿼리 h2에서 직접 출력해보기 그럼 알거임)
+    //이 버전은 Order를 기준으로 페이징이 불가능하다. 왜냐면 limit를 걸게되면 Order를 기준으로 묶는 게 아니라 OrderItem 기준으로 묶기 때문이다.
     @GetMapping("/api/v6/orders")
     public List<OrderQueryDto> ordersV6(){
         
@@ -206,6 +209,7 @@ public class OrderApiController {
 //                .collect(groupingBy(o -> new OrderQueryDto(o.getOrderId(), o.getName(), o.getOrderDate(), o.getOrderStatus(), o.getAddress()),
 //                        mapping(o -> new OrderItemQueryDto(o.getOrderId(), o.getItemName(), o.getOrderPrice(), o.getCount()), toList())
 //                ));
+        //그리고 저렇게 만들어진 Map를 entrySet()으로 하나하나 조회하고 그걸로 OrderQueryDto 스펙으로 초기화 한다음 List화 해주는 것이다.
         //이렇게 최종적으로 OrderQueryDto를 반환해 주게 되는 것이다.
         // 그리고 @EqualsAndHashCode(of="orderId") 부분 유의하기 이것은 OrderQueryDto.java에서의 주석 확인하기
         /**
